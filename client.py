@@ -1,13 +1,43 @@
 import socket
+import threading
 
-targethost = '0.0.0.0'
-targerport = 5555
-soc = socket.socket()
+targethost = "192.168.31.84"
+targetport = 5555
 
-#connecting to target
-soc.connect((targethost, targerport))
+def recieve_msg(sock):
+    while True:
+        try:
+            msg = sock.recv(1024)
+            if not msg:
+                print("[!] server disconnected")
+                break
+            print(f"[*] Server: {msg.decode("utf-8")}")
+        except:
+            print("[!] Error recieving msg from server")
+            break
 
-#sending data
-soc.send(b"GET / HTTP/1.1\r\nHOst: google.com\r\n\r\n")
-response = soc.recv(4096)
-print(response)
+def send_msg(sock):
+    while True:
+        try:
+            msg = input("enter your msg to server: ")
+            sock.send(msg.encode())
+        except:
+            print("[!] Error sending msg")
+            break
+    
+
+def main():
+    client = socket.socket()
+    try:
+        client.connect((targethost,targetport))
+        print(f"[*] Connected to {targethost}:{targetport}")
+    except Exception as e:
+        print(f"[!] Connection error: {e}")
+        return
+
+    threading.Thread(target=recieve_msg, args=(client,)).start()
+    threading.Thread(target=send_msg, args=(client,)).start()
+
+
+if __name__ == "__main__":
+    main()
